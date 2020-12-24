@@ -8,8 +8,10 @@ TIME_BETWEEN_REQUESTS = .15
 TERM = 'SARS-CoV-2 OR COVID-19'
 REQUEST_TRIES = 3
 TIME_BETWEEN_TRIES = 5
-BATCH_SIZE = 10**4  # 'retmax' parameter, 10**4 is maximum
+RECORDS_COUNT = 1000  # How many records to obtain. If == False, obtain all
+BATCH_SIZE = 100  # 'retmax' parameter, 10**4 is maximum
 PRIMARY_OUTPUT_FILE = './output/results.medline'
+
 
 search_url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?'
 fetch_url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?'
@@ -55,8 +57,9 @@ count = int(search_result['count'])
 key = search_result['querykey']
 
 # efetch
+limit = RECORDS_COUNT if RECORDS_COUNT else count
 with open(PRIMARY_OUTPUT_FILE, 'w') as output:
-    for cycle, retstart in enumerate(range(0, count, BATCH_SIZE), start=1):
+    for cycle, retstart in enumerate(range(0, limit, BATCH_SIZE), start=1):
         fetch_params = {'db': 'pubmed',
                         'WebEnv': webenv,
                         'query_key': key,
