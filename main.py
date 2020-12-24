@@ -8,6 +8,7 @@ TIME_BETWEEN_REQUESTS = .15
 TERM = 'SARS-CoV-2 OR COVID-19'
 REQUEST_TRIES = 3
 TIME_BETWEEN_TRIES = 5
+BATCH_SIZE = 10**4  # 'retmax' parameter, 10**4 is maximum
 PRIMARY_OUTPUT_FILE = './output/results.medline'
 
 search_url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?'
@@ -22,8 +23,7 @@ def make_request(basic_url, params):
     Returns request object.
     """
     params = params.copy()
-    params.update({'db': 'pubmed',
-                   'retmode': 'json'})
+    params.update(user_data)
     for i in range(REQUEST_TRIES):
         if time.time() - make_request.last_request_time < TIME_BETWEEN_REQUESTS:
             time.sleep(TIME_BETWEEN_REQUESTS)
@@ -33,6 +33,7 @@ def make_request(basic_url, params):
             return req
             break
         else:
+            print('Request attempt failed')
             time.sleep(TIME_BETWEEN_TRIES)
     raise ValueError('Wrong request results.')
 
@@ -47,7 +48,6 @@ search_params = {'term': TERM,
                  'db': 'pubmed',
                  'retmode': 'json',
                  'usehistory': 'y'}
-search_params.update(user_data)
 req = make_request(search_url, search_params)
 search_result = req.json()['esearchresult']
 webenv = search_result['webenv']
@@ -55,16 +55,14 @@ count = int(search_result['count'])
 key = search_result['querykey']
 
 # efetch
-retmax = 10**4
 with open(PRIMARY_OUTPUT_FILE, 'w') as output:
-    for cycle, retstart in enumerate(range(0, count, retmax), start=1):
+    for cycle, retstart in enumerate(range(0, count, BATCH_SIZE), start=1):
         fetch_params = {'db': 'pubmed',
                         'WebEnv': webenv,
                         'query_key': key,
                         'retstart': retstart,
-                        'retmax': retmax,
+                        'retmax': BATCH_SIZE,
                         'rettype': 'medline'}
-        fetch_params.update(user_data)
         data = make_request(fetch_url, fetch_params).text
         output.write(data)
         articles_count = data.count('\n\n') + 1
