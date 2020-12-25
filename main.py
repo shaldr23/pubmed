@@ -10,7 +10,7 @@ REQUEST_TRIES = 3
 TIME_BETWEEN_TRIES = 5
 RECORDS_COUNT = 1000  # How many records to obtain. If == False, obtain all
 BATCH_SIZE = 100  # 'retmax' parameter, 10**4 is maximum
-PRIMARY_OUTPUT_FILE = './output/results.medline'
+PRIMARY_OUTPUT_FILE = './data/output/results.medline'
 
 
 search_url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?'
