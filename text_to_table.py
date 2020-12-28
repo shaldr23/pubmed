@@ -39,3 +39,11 @@ if record:
     records_list.append(processrecord(record))  # catch last record
 
 frame = pd.DataFrame(records_list)
+
+good_dates = frame['DP'].apply(lambda x: bool(re.match(r'\d{4} \w{3}', x)))
+frame = frame[good_dates]
+frame['DP'] = frame
+# %%
+good_dates = frame['DP'].apply(lambda x: bool(re.match(r'\d{4} \w{3}($| \d{2})', x)))
+pd.to_datetime(frame['DP'][good_dates], yearfirst=True, errors='coerce')
+# %%
