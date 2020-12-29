@@ -1,4 +1,8 @@
 # %%
+"""
+Script to download records from pubmed using API
+into a file of MEDLINE format
+"""
 import json
 import requests
 import time
@@ -8,8 +12,8 @@ TIME_BETWEEN_REQUESTS = .15
 TERM = 'SARS-CoV-2 OR COVID-19'
 REQUEST_TRIES = 3
 TIME_BETWEEN_TRIES = 5
-RECORDS_COUNT = 1000  # How many records to obtain. If == False, obtain all
-BATCH_SIZE = 100  # 'retmax' parameter, 10**4 is maximum
+RECORDS_COUNT = False  # How many records to obtain. If == False, obtain all
+BATCH_SIZE = 10**4  # 'retmax' parameter, 10**4 is maximum
 PRIMARY_OUTPUT_FILE = './data/output/results.medline'
 
 

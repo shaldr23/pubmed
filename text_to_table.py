@@ -1,15 +1,21 @@
 # %%
+"""
+Script to make a pandas DataFrame object
+from a text file in MEDLINE format
+"""
 import pandas as pd
 import re
+import pickle
 
 MEDLINE_TEXT_FILE = './data/output/results.medline'
+SAVE_TABLE = './data/output/table.pickle'
 
 
 def processrecord(record: str,
                   fields=['PMID', 'DP', 'TI', 'BTI',
                           'AB', 'PT', 'OT']) -> 'pd.Series':
     """
-    One record into Series
+    Convert one record into pd.Series
     """
     record = record.strip()
     record = record.replace('\n' + ' '*6, ' ')
@@ -27,6 +33,19 @@ def processrecord(record: str,
     return result
 
 
+def all_lists(value):
+    """
+    Convert all values into list in columns containing lists
+    (used in pd.Series.apply method)
+    """
+    if type(value) == list:
+        return value
+    elif pd.isna(value):
+        return []
+    else:
+        return [value]
+
+
 records_list = []
 with open(MEDLINE_TEXT_FILE) as mtf:
     record = ''
@@ -40,10 +59,18 @@ if record:
 
 frame = pd.DataFrame(records_list)
 
+# dates should contain at least month
 good_dates = frame['DP'].apply(lambda x: bool(re.match(r'\d{4} \w{3}', x)))
 frame = frame[good_dates]
-frame['DP'] = frame
-# %%
-good_dates = frame['DP'].apply(lambda x: bool(re.match(r'\d{4} \w{3}($| \d{2})', x)))
-pd.to_datetime(frame['DP'][good_dates], yearfirst=True, errors='coerce')
-# %%
+frame['date'] = pd.to_datetime(frame['DP'], yearfirst=True, errors='coerce')
+frame.dropna(subset=['date'], inplace=True)
+frame['date_month'] = frame['date'].apply(lambda x: x.replace(day=1))
+frame.reset_index(drop=True, inplace=True)
+# columns containing lists should have all list values
+for col in frame:
+    if list in frame[col].apply(type).values:
+        frame[col] = frame[col].apply(all_lists)
+
+if SAVE_TABLE:
+    with open(SAVE_TABLE, 'wb') as f:
+        pickle.dump(frame, f)
